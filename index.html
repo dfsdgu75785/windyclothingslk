@@ -267,6 +267,84 @@ section { padding:90px 52px; }
 .rv-text { font-size:.82rem; color:var(--ink3); line-height:1.65; }
 .rv-date { font-size:.68rem; color:var(--muted-l); margin-top:7px; }
 
+/* ── STAFF SECTION ── */
+#team { background:#f0dc82; padding:80px 52px; }
+#team .team-heading { margin-bottom:40px; }
+#team .team-heading h2 { font-family:'Georgia',serif; font-size:clamp(2.2rem,5vw,3.5rem); color:#1a1208; line-height:1.15; font-weight:400; }
+#team .team-heading h2 em { font-style:italic; }
+.staff-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  border:1px solid rgba(0,0,0,.12);
+}
+.staff-card {
+  background:#f5e97a;
+  border:1px solid rgba(0,0,0,.12);
+  padding:32px 22px 24px;
+  text-align:center;
+  transition:background .3s;
+  position:relative;
+}
+.staff-card:hover { background:#f0dc60; }
+.staff-avatar-wrap {
+  width:90px; height:90px; border-radius:50%;
+  background:#fff; border:1px solid rgba(0,0,0,.1);
+  display:flex; align-items:center; justify-content:center;
+  font-size:2.2rem; margin:0 auto 16px; position:relative;
+}
+.staff-rank-badge {
+  position:absolute; bottom:2px; right:2px;
+  width:24px; height:24px; border-radius:50%;
+  background:#c8a020; display:flex; align-items:center; justify-content:center;
+  font-size:.65rem; color:#fff; font-weight:700;
+}
+.staff-name { font-family:'Georgia',serif; font-size:1.2rem; color:#1a1208; margin-bottom:4px; font-weight:400; }
+.staff-role { font-family:'Syne',sans-serif; font-size:.55rem; letter-spacing:3px; text-transform:uppercase; color:#6b5740; margin-bottom:12px; }
+.staff-quote { font-size:.78rem; color:#3d2e1a; line-height:1.65; font-style:italic; margin-bottom:14px; }
+.staff-tags { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; }
+.staff-tag { font-size:.62rem; color:#3d2e1a; display:flex; align-items:center; gap:3px; }
+.staff-tag::before { content:attr(data-icon); }
+
+/* Design Collective dark card */
+.design-collective {
+  background:#1a1208;
+  border:1px solid rgba(0,0,0,.2);
+  padding:32px 22px 24px;
+  text-align:center;
+  grid-column:span 2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.dc-icons { display:flex; gap:14px; justify-content:center; margin-bottom:16px; }
+.dc-icon { width:54px; height:54px; border-radius:50%; background:#2a2010; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+.dc-title { font-family:'Georgia',serif; font-size:1.3rem; color:#d4a853; font-style:italic; margin-bottom:12px; }
+.dc-names { display:flex; gap:24px; justify-content:center; margin-bottom:10px; }
+.dc-member { text-align:center; }
+.dc-member-name { font-family:'Georgia',serif; font-size:1rem; color:#d4a853; }
+.dc-member-role { font-size:.58rem; letter-spacing:2px; text-transform:uppercase; color:#6b5740; margin-top:2px; }
+.dc-quote { font-size:.72rem; color:rgba(255,255,255,.6); font-style:italic; line-height:1.6; margin-bottom:12px; }
+.dc-tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.dc-tag { font-size:.6rem; color:rgba(255,255,255,.45); display:flex; align-items:center; gap:3px; }
+.dc-supporter { margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08); font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:#6b5740; }
+.dc-supporter span { color:#d4a853; font-weight:700; }
+
+/* Team footer quote */
+.team-footer-quote {
+  background:#f5f0e0; border:1px solid rgba(0,0,0,.08);
+  padding:36px; text-align:center; margin-top:0;
+  border-top:none;
+}
+.team-footer-quote blockquote {
+  font-family:'Georgia',serif; font-size:1.05rem; color:#3d2e1a;
+  font-style:italic; margin-bottom:12px;
+}
+.team-footer-quote cite {
+  font-family:'Syne',sans-serif; font-size:.6rem; letter-spacing:4px;
+  text-transform:uppercase; color:#9e8670;
+}
+
+@media(max-width:900px) { .staff-grid{grid-template-columns:repeat(2,1fr)} .design-collective{grid-column:span 2} }
+@media(max-width:560px) { .staff-grid{grid-template-columns:1fr} .design-collective{grid-column:span 1} #team{padding:60px 20px} }
+
 /* ── ORDER TRACKER ── */
 .tracker-section { background:var(--bg2); padding:70px 52px; border-top:1px solid rgba(184,137,74,.1); }
 .tracker-box { max-width:560px; margin:0 auto; }
@@ -387,6 +465,207 @@ footer { background:var(--ink); padding:60px 52px 28px; color:rgba(255,255,255,.
 .suc-p { color:var(--muted); line-height:1.7; font-size:.9rem; }
 .suc-ref { margin:16px 0; padding:13px; background:rgba(45,122,79,.07); border:1.5px solid rgba(45,122,79,.2); font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:4px; color:var(--green); }
 
+  /* ─── STAFF ─── */
+.staff-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:24px; }
+.staff-card { background:var(--white); border:1px solid rgba(184,137,74,.12); padding:28px 20px; text-align:center; transition:all .4s; position:relative; overflow:hidden; }
+.staff-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(184,137,74,.15); border-color:rgba(184,137,74,.35); }
+.staff-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--wind),var(--accent)); }
+.staff-avatar { width:72px; height:72px; border-radius:50%; background:var(--wind-xl); border:2px solid rgba(184,137,74,.3); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--wind-d); letter-spacing:2px; }
+.staff-name { font-family:'Syne',sans-serif; font-weight:700; font-size:.96rem; color:var(--ink); margin-bottom:4px; }
+.staff-role { font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:2px; text-transform:uppercase; color:var(--wind); margin-bottom:10px; }
+.staff-quote { font-size:.76rem; color:var(--muted); line-height:1.6; font-style:italic; margin-bottom:12px; min-height:36px; }
+.staff-tags { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; }
+.staff-tag { background:var(--wind-xl); border:1px solid rgba(184,137,74,.2); color:var(--wind-d); font-family:'Syne',sans-serif; font-size:.56rem; letter-spacing:2px; text-transform:uppercase; padding:3px 8px; font-weight:700; }
+@media(max-width:680px){ #team{padding:60px 20px;} .staff-grid{grid-template-columns:1fr 1fr;gap:14px;} }
+
+
+.conn-badge { display:none; position:fixed; bottom:20px; right:20px; z-index:9998; padding:7px 16px; font-family:'Syne',sans-serif; font-size:.6rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; border-radius:2px; }
+.conn-badge.live { display:flex; align-items:center; gap:6px; background:rgba(45,122,79,.1); border:1px solid rgba(45,122,79,.3); color:var(--green); }
+.conn-badge.offline { display:flex; align-items:center; gap:6px; background:rgba(201,149,46,.1); border:1px solid rgba(201,149,46,.3); color:#a07820; }
+.conn-dot { width:6px; height:6px; border-radius:50%; background:currentColor; animation:pulse 1.5s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+
+#toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--ink); color:var(--white); padding:12px 28px; font-family:'Syne',sans-serif; font-size:.74rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; z-index:999999; transition:transform .4s; white-space:nowrap; box-shadow:0 8px 28px rgba(0,0,0,.25); }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+@media(max-width:900px) { .about-band{grid-template-columns:1fr;gap:36px} .features{grid-template-columns:1fr 1fr} .fb-grid{grid-template-columns:1fr;gap:40px} .footer-top{grid-template-columns:1fr 1fr;gap:32px} }
+@media(max-width:680px) { nav{padding:14px 20px} .nav-links{display:none} section{padding:60px 20px} .hero{padding:100px 20px 60px} .hero-title{font-size:5rem} .hero-float{display:none} .features{grid-template-columns:1fr} .products-grid{grid-template-columns:1fr 1fr;gap:14px} .cart-drawer{width:100%;right:-100%} .mg{grid-template-columns:1fr} .pay-grid{grid-template-columns:1fr 1fr} .footer-top{grid-template-columns:1fr} .about-band{padding:50px 20px} .features{padding:40px 20px} .tracker-input-row{flex-direction:column} .tracker-section{padding:50px 20px} }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="curf"></div>
+<div class="conn-badge" id="connBadge"><span class="conn-dot"></span><span id="connText">Connected</span></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">W<em>I</em>NDY</a>
+  <ul class="nav-links">
+    <li><a href="#products">Collection</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#feedback">Reviews</a></li>
+    <li><a href="#tracker">Track Order</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="openCart()">Cart <span id="cartCount">0</span></button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div><div class="hero-pattern"></div><div class="hero-blob"></div><div class="hero-blob2"></div><div class="hero-line"></div><div class="hero-line2"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="eyebrow-line"></span>Sri Lanka's Finest Streetwear</div>
+    <h1 class="hero-title">WIN<span class="stroke">DY</span></h1>
+    <p class="hero-tagline">Move With The Flow</p>
+    <div class="hero-actions">
+      <a href="#products" class="btn-main">Shop Now</a>
+      <a href="#about" class="btn-ghost">Our Story</a>
+    </div>
+  </div>
+  <div class="hero-float"><div class="float-num">500+</div><div class="float-lbl">Orders Shipped</div></div>
+  <div class="hero-scroll"><span class="scroll-bar"></span>Scroll Down</div>
+</section>
+
+<div class="marquee-strip"><div class="marquee-inner" id="mqEl"></div></div>
+
+<section id="products">
+  <div class="sec-hd">
+    <div><div class="sec-label">New Drop</div><h2 class="sec-title">The Collection</h2></div>
+    <a href="#" class="sec-link">View All →</a>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<div class="features">
+  <div class="feat"><div class="feat-icon">✂️</div><div class="feat-title">Premium Quality</div><div class="feat-desc">100% cotton, pre-shrunk, heavy GSM fabrics built to last.</div></div>
+  <div class="feat"><div class="feat-icon">🖨️</div><div class="feat-title">Custom Printing</div><div class="feat-desc">Your name, our craft. Heat-pressed WINDY prints that don't fade.</div></div>
+  <div class="feat"><div class="feat-icon">🚚</div><div class="feat-title">Island Delivery</div><div class="feat-desc">LKR 300 flat shipping across Sri Lanka. 3–5 business days.</div></div>
+  <div class="feat"><div class="feat-icon">🔄</div><div class="feat-title">Easy Returns</div><div class="feat-desc">7-day hassle-free returns. Your satisfaction is everything.</div></div>
+</div>
+
+<div class="about-band" id="about">
+  <div>
+    <h2>BORN FROM<br>THE <span>BREEZE</span></h2>
+    <p>WINDY was born on the streets of Sri Lanka — a brand that moves like the wind, free and unstoppable. Every piece is crafted with premium quality and stamped with our signature name.</p>
+    <div class="about-stats">
+      <div class="astat"><h3>100%</h3><p>Sri Lankan</p></div>
+      <div class="astat"><h3>500+</h3><p>Happy Orders</p></div>
+      <div class="astat"><h3>★ 4.9</h3><p>Rated</p></div>
+    </div>
+  </div>
+  <div class="about-img-side">
+    <div class="about-logo-big">WINDY</div>
+    <div class="about-tagline-big">Move With The Flow</div>
+    <div class="about-divider"></div>
+    <div class="about-detail">From hoodies to tees, caps to joggers — we print your identity on every piece. This isn't just clothing. This is a lifestyle built in Sri Lanka.</div>
+  </div>
+</div>
+
+<!-- STAFF SECTION -->
+<section id="team">
+  <div class="team-heading">
+    <h2>The <em>Collective</em><br>That Moves</h2>
+  </div>
+  <div class="staff-grid">
+
+    <!-- Waageesha -->
+    <div class="staff-card">
+      <div class="staff-avatar-wrap">🌊<div class="staff-rank-badge">👑</div></div>
+      <div class="staff-name">Waageesha</div>
+      <div class="staff-role">Owner / CEO</div>
+      <div class="staff-quote">"The vision. The wind that started it all."</div>
+      <div class="staff-tags">
+        <span class="staff-tag" data-icon="🌟">Visionary</span>
+        <span class="staff-tag" data-icon="🏆">Founder</span>
+      </div>
+    </div>
+
+    <!-- Kavindu -->
+    <div class="staff-card">
+      <div class="staff-avatar-wrap">⚡</div>
+      <div class="staff-name">Kavindu</div>
+      <div class="staff-role">Executive Officer / Marketing Director</div>
+      <div class="staff-quote">"Strategy meets creativity. Making waves in the market."</div>
+      <div class="staff-tags">
+        <span class="staff-tag" data-icon="📋">Strategy</span>
+        <span class="staff-tag" data-icon="📣">Marketing</span>
+        <span class="staff-tag" data-icon="🚀">Growth</span>
+      </div>
+    </div>
+
+    <!-- Kasindu -->
+    <div class="staff-card">
+      <div class="staff-avatar-wrap">🎬</div>
+      <div class="staff-name">Kasindu</div>
+      <div class="staff-role">Marketing / Financial Manager</div>
+      <div class="staff-quote">"Numbers, narratives, and frames. The multi-hyphenate."</div>
+      <div class="staff-tags">
+        <span class="staff-tag" data-icon="💰">Finance</span>
+        <span class="staff-tag" data-icon="📷">Camera</span>
+        <span class="staff-tag" data-icon="✂️">Editor</span>
+      </div>
+    </div>
+
+    <!-- Chethiya -->
+    <div class="staff-card">
+      <div class="staff-avatar-wrap">📊</div>
+      <div class="staff-name">Chethiya</div>
+      <div class="staff-role">Marketing / Financial Analyzer</div>
+      <div class="staff-quote">"Data-driven decisions. Turning numbers into direction."</div>
+      <div class="staff-tags">
+        <span class="staff-tag" data-icon="📈">Analytics</span>
+        <span class="staff-tag" data-icon="🔍">Insights</span>
+      </div>
+    </div>
+
+    <!-- Shalinya -->
+    <div class="staff-card">
+      <div class="staff-avatar-wrap">✨</div>
+      <div class="staff-name">Shalinya</div>
+      <div class="staff-role">Model</div>
+      <div class="staff-quote">"The face of the wind. Bringing the vision to life."</div>
+      <div class="staff-tags">
+        <span class="staff-tag" data-icon="🎭">Face of WINDY</span>
+        <span class="staff-tag" data-icon="💫">Muse</span>
+      </div>
+    </div>
+
+    <!-- Desh -->
+    <div class="staff-card">
+      <div class="staff-avatar-wrap">🏃</div>
+      <div class="staff-name">Desh</div>
+      <div class="staff-role">Supporter</div>
+      <div class="staff-quote">"Believer. Backer. Wind beneath."</div>
+      <div class="staff-tags">
+        <span class="staff-tag" data-icon="🎬">Helper</span>
+        <span class="staff-tag" data-icon="💭">Dreamer</span>
+      </div>
+    </div>
+
+    <!-- Design Collective — spans 2 columns -->
+    <div class="design-collective">
+      <div class="dc-icons">
+        <div class="dc-icon">🎨</div>
+        <div class="dc-icon">✏️</div>
+        <div class="dc-icon">✏️</div>
+      </div>
+      <div class="dc-title">The Design Collective</div>
+      <div class="dc-names">
+        <div class="dc-member"><div class="dc-member-name">Vimash</div><div class="dc-member-role">Designer</div></div>
+        <div class="dc-member"><div class="dc-member-name">Manuja</div><div class="dc-member-role">Designer</div></div>
+        <div class="dc-member"><div class="dc-member-name">Theekshana</div><div class="dc-member-role">Designer</div></div>
+      </div>
+      <div class="dc-quote">"Three minds, one vision. Crafting the threads that tell our story."</div>
+      <div class="dc-tags">
+        <span class="dc-tag" data-icon="👕">Apparel Design</span>
+        <span class="dc-tag" data-icon="🖼️">Graphics</span>
+        <span class="dc-tag" data-icon="✂️">Pattern Making</span>
+      </div>
+      <div class="dc-supporter">SUPPORTER &nbsp;<span>DESH</span> &nbsp;🏃</div>
+    </div>
+
+  </div>
+  
 /* Connection status badge */
 .conn-badge { display:none; position:fixed; bottom:20px; right:20px; z-index:9998; padding:7px 16px; font-family:'Syne',sans-serif; font-size:.6rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; border-radius:2px; }
 .conn-badge.live { display:flex; align-items:center; gap:6px; background:rgba(45,122,79,.1); border:1px solid rgba(45,122,79,.3); color:var(--green); }
