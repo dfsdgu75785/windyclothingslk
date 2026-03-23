@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WINDY — Move With The Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║          WINDY STORE — GOOGLE SHEETS BACKEND SETUP           ║
+║                    (One-time, ~5 minutes)                    ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  STEP 1 — Create your Google Sheet                           ║
+║  ─────────────────────────────────                           ║
+║  • Go to sheets.google.com → New Spreadsheet                 ║
+║  • Name it: WINDY Store                                      ║
+║  • Rename the first tab: Orders                              ║
+║  • Add a second tab: Reviews                                 ║
+║                                                              ║
+║  Orders tab — Row 1 headers (exactly as written):            ║
+║  Ref | Date | Customer | Email | Phone | Address |           ║
+║  Items | Subtotal | Discount | Shipping | Total |            ║
+║  Coupon | Payment | Status                                   ║
+║                                                              ║
+║  Reviews tab — Row 1 headers:                                ║
+║  Name | Email | Rating | Review | Date                       ║
+║                                                              ║
+║  STEP 2 — Add the Apps Script                                ║
+║  ────────────────────────────                                ║
+║  • In the sheet: Extensions → Apps Script                    ║
+║  • Delete all existing code                                  ║
+║  • Paste EXACTLY this code:                                  ║
+║                                                              ║
+║  ┌──────────────────────────────────────────────────────┐   ║
+║  │ function doPost(e) {                                  │   ║
+║  │   const d = JSON.parse(e.postData.contents);          │   ║
+║  │   const ss = SpreadsheetApp.getActiveSpreadsheet();   │   ║
+║  │   if (d.type === 'order') {                           │   ║
+║  │     ss.getSheetByName('Orders').appendRow([           │   ║
+║  │       d.ref, d.date, d.customer, d.email, d.phone,    │   ║
+║  │       d.address, d.items, d.subtotal, d.discount,     │   ║
+║  │       d.shipping, d.total, d.coupon, d.payment,       │   ║
+║  │       d.status                                        │   ║
+║  │     ]);                                               │   ║
+║  │   }                                                   │   ║
+║  │   if (d.type === 'review') {                          │   ║
+║  │     ss.getSheetByName('Reviews').appendRow([          │   ║
+║  │       d.name, d.email, d.rating, d.text, d.date       │   ║
+║  │     ]);                                               │   ║
+║  │   }                                                   │   ║
+║  │   if (d.type === 'updateStatus') {                    │   ║
+║  │     const sheet = ss.getSheetByName('Orders');        │   ║
+║  │     const data = sheet.getDataRange().getValues();    │   ║
+║  │     for (let i = 1; i < data.length; i++) {           │   ║
+║  │       if (data[i][0] === d.ref) {                     │   ║
+║  │         sheet.getRange(i+1, 14).setValue(d.status);   │   ║
+║  │         break;                                        │   ║
+║  │       }                                               │   ║
+║  │     }                                                 │   ║
+║  │   }                                                   │   ║
+║  │   return ContentService                               │   ║
+║  │     .createTextOutput(JSON.stringify({ok:true}))      │   ║
+║  │     .setMimeType(ContentService.MimeType.JSON);       │   ║
+║  │ }                                                     │   ║
+║  │                                                       │   ║
+║  │ function doGet(e) {                                   │   ║
+║  │   const ss = SpreadsheetApp.getActiveSpreadsheet();   │   ║
+║  │   if (e.parameter.type === 'reviews') {               │   ║
+║  │     const rows = ss.getSheetByName('Reviews')         │   ║
+║  │       .getDataRange().getValues().slice(1);           │   ║
+║  │     return ContentService.createTextOutput(           │   ║
+║  │       JSON.stringify(rows.map(r=>({                   │   ║
+║  │         name:r[0], email:r[1], rating:+r[2],          │   ║
+║  │         text:r[3], date:r[4]                          │   ║
+║  │       })))                                            │   ║
+║  │     ).setMimeType(ContentService.MimeType.JSON);      │   ║
+║  │   }                                                   │   ║
+║  │   const rows = ss.getSheetByName('Orders')            │   ║
+║  │     .getDataRange().getValues().slice(1);             │   ║
+║  │   return ContentService.createTextOutput(             │   ║
+║  │     JSON.stringify(rows.reverse().map((r,i)=>({       │   ║
+║  │       ref:r[0], date:r[1], customer:r[2],             │   ║
+║  │       email:r[3], phone:r[4], address:r[5],           │   ║
+║  │       items:r[6], subtotal:r[7], discount:r[8],       │   ║
+║  │       shipping:r[9], total:r[10], coupon:r[11],       │   ║
+║  │       payment:r[12], status:r[13]                     │   ║
+║  │     })))                                              │   ║
+║  │   ).setMimeType(ContentService.MimeType.JSON);        │   ║
+║  │ }                                                     │   ║
+║  └──────────────────────────────────────────────────────┘   ║
+║                                                              ║
+║  STEP 3 — Deploy as Web App                                  ║
+║  ──────────────────────────                                  ║
+║  • Click Deploy → New deployment                             ║
+║  • Type: Web app                                             ║
+║  • Execute as: Me                                            ║
+║  • Who has access: Anyone                                    ║
+║  • Click Deploy → Authorize → Copy the Web App URL           ║
+║                                                              ║
+║  STEP 4 — Paste your URL below                               ║
+║  ─────────────────────────────                               ║
+║  Find: const SHEET_URL = ''                                  ║
+║  Paste your URL between the quotes                           ║
+║  Do the SAME in windy-admin.html                             ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+-->
+
+<style>
+:root {
+  --bg:        #f8f4ef;
+  --bg2:       #f2ece4;
+  --bg3:       #ede4d8;
+  --white:     #ffffff;
+  --parchment: #faf7f2;
+  --wind:      #b8894a;
+  --wind-d:    #8a6230;
+  --wind-l:    #d4aa72;
+  --wind-xl:   #f0dfc0;
+  --accent:    #c9952e;
+  --ink:       #1a1208;
+  --ink2:      #3d2e1a;
+  --ink3:      #6b5740;
+  --muted:     #9e8670;
+  --muted-l:   #c4b09a;
+  --green:     #2d7a4f;
+  --red:       #b33a2a;
+  --sand:      #e8d5b7;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; overflow-x:hidden; cursor:none; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--wind-l); border-radius:3px; }
+
+#cur, #curf { position:fixed; pointer-events:none; z-index:999999; border-radius:50%; }
+#cur  { width:9px; height:9px; background:var(--wind); mix-blend-mode:multiply; transition:transform .1s; }
+#curf { width:30px; height:30px; border:1.5px solid var(--wind); opacity:.4; transition:all .14s ease; }
+
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:1000;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 52px; background:transparent; transition:all .4s;
+}
+nav.scrolled {
+  background:rgba(248,244,239,.96); backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(184,137,74,.18); box-shadow:0 2px 30px rgba(184,137,74,.08);
+}
+.nav-logo { font-family:'Bebas Neue',sans-serif; font-size:1.9rem; letter-spacing:6px; color:var(--ink); text-decoration:none; }
+.nav-logo em { color:var(--wind); font-style:normal; }
+.nav-links { display:flex; gap:30px; list-style:none; align-items:center; }
+.nav-links a { color:var(--ink3); font-size:.74rem; letter-spacing:3px; text-transform:uppercase; font-family:'Syne',sans-serif; font-weight:600; text-decoration:none; transition:color .3s; position:relative; }
+.nav-links a::after { content:''; position:absolute; bottom:-3px; left:0; right:0; height:1.5px; background:var(--wind); transform:scaleX(0); transition:transform .3s; }
+.nav-links a:hover { color:var(--wind); }
+.nav-links a:hover::after { transform:scaleX(1); }
+.nav-right { display:flex; gap:12px; align-items:center; }
+.cart-btn { position:relative; background:var(--wind); color:var(--white); padding:10px 26px; font-family:'Syne',sans-serif; font-size:.72rem; letter-spacing:3px; text-transform:uppercase; border:none; cursor:none; transition:all .3s; font-weight:700; box-shadow:0 4px 16px rgba(184,137,74,.35); }
+.cart-btn:hover { background:var(--wind-d); transform:translateY(-1px); }
+#cartCount { position:absolute; top:-8px; right:-8px; background:var(--accent); color:var(--white); width:19px; height:19px; border-radius:50%; font-size:.62rem; display:none; align-items:center; justify-content:center; font-weight:800; border:2px solid var(--bg); }
+
+.hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:120px 52px 80px; position:relative; overflow:hidden; }
+.hero-bg { position:absolute; inset:0; background:linear-gradient(150deg,#fdf8f2 0%,#f5ead8 35%,#eedfc8 65%,#f0e6d2 100%); }
+.hero-pattern { position:absolute; inset:0; opacity:.06; background-image:radial-gradient(circle at 20% 30%,var(--wind) 1px,transparent 1px),radial-gradient(circle at 80% 70%,var(--wind) 1px,transparent 1px),radial-gradient(circle at 50% 50%,var(--accent) 1px,transparent 1px); background-size:60px 60px,80px 80px,40px 40px; }
+.hero-blob { position:absolute; top:-100px; right:-100px; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(184,137,74,.12) 0%,transparent 70%); pointer-events:none; }
+.hero-blob2 { position:absolute; bottom:-150px; left:-80px; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(201,149,46,.08) 0%,transparent 70%); pointer-events:none; }
+.hero-line { position:absolute; top:0; right:180px; bottom:0; width:1px; background:linear-gradient(to bottom,transparent,rgba(184,137,74,.2),transparent); }
+.hero-line2 { position:absolute; top:0; right:220px; bottom:0; width:1px; background:linear-gradient(to bottom,transparent,rgba(184,137,74,.08),transparent); }
+.hero-content { position:relative; z-index:2; max-width:750px; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:10px; font-family:'Syne',sans-serif; font-size:.68rem; letter-spacing:5px; text-transform:uppercase; color:var(--wind); margin-bottom:24px; opacity:0; animation:fadeUp .9s .2s ease forwards; }
+.eyebrow-line { width:30px; height:1px; background:var(--wind); }
+.hero-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(5rem,13vw,12rem); line-height:.88; letter-spacing:-1px; color:var(--ink); opacity:0; animation:fadeUp .9s .4s ease forwards; }
+.hero-title .stroke { -webkit-text-stroke:2px var(--wind); color:transparent; }
+.hero-tagline { margin-top:22px; font-size:1.1rem; color:var(--ink3); letter-spacing:2px; font-style:italic; font-weight:300; opacity:0; animation:fadeUp .9s .6s ease forwards; }
+.hero-actions { display:flex; gap:16px; margin-top:44px; align-items:center; opacity:0; animation:fadeUp .9s .8s ease forwards; }
+.btn-main { background:var(--wind); color:var(--white); padding:15px 42px; font-family:'Syne',sans-serif; font-size:.76rem; letter-spacing:3px; text-transform:uppercase; font-weight:700; border:none; cursor:none; transition:all .3s; text-decoration:none; display:inline-block; box-shadow:0 6px 24px rgba(184,137,74,.4); }
+.btn-main:hover { background:var(--wind-d); transform:translateY(-2px); }
+.btn-ghost { background:transparent; color:var(--ink); padding:15px 42px; font-family:'Syne',sans-serif; font-size:.76rem; letter-spacing:3px; text-transform:uppercase; font-weight:700; border:2px solid rgba(184,137,74,.4); cursor:none; transition:all .3s; text-decoration:none; display:inline-block; }
+.btn-ghost:hover { border-color:var(--wind); color:var(--wind); }
+.hero-float { position:absolute; top:180px; right:52px; background:var(--white); border:1px solid rgba(184,137,74,.2); padding:18px 22px; text-align:center; box-shadow:0 12px 40px rgba(184,137,74,.15); opacity:0; animation:fadeUp .9s 1s ease forwards; }
+.float-num { font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--wind); letter-spacing:2px; line-height:1; }
+.float-lbl { font-family:'Syne',sans-serif; font-size:.58rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+.hero-scroll { position:absolute; bottom:36px; left:52px; display:flex; align-items:center; gap:12px; font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:4px; text-transform:uppercase; color:var(--muted); opacity:0; animation:fadeUp .9s 1.2s ease forwards; }
+.scroll-bar { width:40px; height:1px; background:var(--wind-l); position:relative; overflow:hidden; }
+.scroll-bar::after { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:var(--wind); animation:scrollAnim 2s ease infinite; }
+@keyframes scrollAnim { to{left:100%} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:none} }
+
+.marquee-strip { border-top:1px solid rgba(184,137,74,.2); border-bottom:1px solid rgba(184,137,74,.2); background:var(--wind); overflow:hidden; padding:14px 0; }
+.marquee-inner { display:flex; animation:mq 22s linear infinite; white-space:nowrap; }
+.marquee-inner span { font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:5px; color:var(--white); padding:0 28px; opacity:.9; }
+.marquee-inner .sep { color:rgba(255,255,255,.4); }
+@keyframes mq { to{transform:translateX(-50%)} }
+
+section { padding:90px 52px; }
+.sec-hd { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:54px; }
+.sec-label { font-family:'Syne',sans-serif; font-size:.64rem; letter-spacing:5px; text-transform:uppercase; color:var(--wind); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.sec-label::before { content:''; display:block; width:20px; height:1px; background:var(--wind); }
+.sec-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(2.8rem,5.5vw,4.5rem); line-height:1; letter-spacing:1px; color:var(--ink); }
+.sec-link { font-family:'Syne',sans-serif; font-size:.68rem; letter-spacing:3px; text-transform:uppercase; color:var(--wind); text-decoration:none; border-bottom:1px solid var(--wind-l); padding-bottom:3px; transition:all .3s; }
+.sec-link:hover { color:var(--wind-d); border-color:var(--wind-d); }
+
+#products { background:var(--bg); }
+.products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; }
+.product-card { background:var(--white); cursor:none; border:1px solid rgba(184,137,74,.1); transition:all .4s; overflow:hidden; box-shadow:0 2px 16px rgba(184,137,74,.06); }
+.product-card:hover { transform:translateY(-5px); box-shadow:0 16px 48px rgba(184,137,74,.18); border-color:rgba(184,137,74,.3); }
+.product-card:hover .p-img { transform:scale(1.05); }
+.product-card:hover .p-overlay { opacity:1; }
+.p-img-wrap { aspect-ratio:3/4; overflow:hidden; position:relative; background:var(--bg2); }
+.p-img { width:100%; height:100%; transition:transform .6s ease; display:flex; align-items:center; justify-content:center; }
+.p-overlay { position:absolute; inset:0; background:rgba(248,244,239,.82); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .4s; }
+.add-btn { background:var(--wind); color:var(--white); padding:13px 28px; font-family:'Syne',sans-serif; font-size:.72rem; letter-spacing:3px; text-transform:uppercase; font-weight:700; border:none; cursor:none; transform:translateY(8px); transition:transform .3s,background .3s; box-shadow:0 6px 20px rgba(184,137,74,.4); }
+.product-card:hover .add-btn { transform:none; }
+.add-btn:hover { background:var(--wind-d); }
+.p-badge { position:absolute; top:14px; left:14px; background:var(--accent); color:var(--white); font-family:'Syne',sans-serif; font-size:.6rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; padding:4px 10px; }
+.p-info { padding:20px 22px; border-top:1px solid rgba(184,137,74,.08); }
+.p-name { font-family:'Syne',sans-serif; font-weight:700; font-size:.96rem; color:var(--ink); margin-bottom:4px; }
+.p-desc { font-size:.78rem; color:var(--muted); margin-bottom:14px; line-height:1.5; }
+.p-footer { display:flex; align-items:center; justify-content:space-between; }
+.p-price { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--wind); letter-spacing:2px; }
+.p-sizes { display:flex; gap:5px; flex-wrap:wrap; }
+.sz { width:30px; height:30px; border:1.5px solid rgba(184,137,74,.25); background:transparent; color:var(--muted); font-size:.62rem; font-family:'Syne',sans-serif; cursor:none; transition:all .2s; display:flex; align-items:center; justify-content:center; font-weight:600; }
+.sz:hover, .sz.on { border-color:var(--wind); color:var(--wind); background:var(--wind-xl); }
+
+.about-band { background:linear-gradient(135deg,var(--ink) 0%,var(--ink2) 100%); padding:80px 52px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; position:relative; overflow:hidden; }
+.about-band::before { content:'WINDY'; position:absolute; top:-20px; right:-20px; font-family:'Bebas Neue',sans-serif; font-size:16rem; color:rgba(184,137,74,.04); letter-spacing:-4px; line-height:1; pointer-events:none; user-select:none; }
+.about-band h2 { font-family:'Bebas Neue',sans-serif; font-size:clamp(2.5rem,5vw,4rem); color:var(--white); line-height:1; letter-spacing:2px; }
+.about-band h2 span { color:var(--wind-l); }
+.about-band p { color:rgba(255,255,255,.65); font-size:.96rem; line-height:1.8; margin-top:16px; }
+.about-stats { display:flex; gap:40px; margin-top:32px; }
+.astat h3 { font-family:'Bebas Neue',sans-serif; font-size:3rem; color:var(--wind-l); letter-spacing:2px; line-height:1; }
+.astat p { font-size:.66rem; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.4); margin-top:4px; }
+.about-img-side { background:rgba(255,255,255,.04); border:1px solid rgba(184,137,74,.2); padding:40px; text-align:center; }
+.about-logo-big { font-family:'Bebas Neue',sans-serif; font-size:5rem; letter-spacing:8px; color:var(--wind-l); line-height:1; }
+.about-tagline-big { font-size:.72rem; letter-spacing:5px; text-transform:uppercase; color:rgba(255,255,255,.3); margin-top:8px; }
+.about-divider { width:60px; height:1px; background:var(--wind); margin:20px auto; }
+.about-detail { font-size:.8rem; color:rgba(255,255,255,.5); line-height:1.7; }
+
+.features { background:var(--white); padding:60px 52px; display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid rgba(184,137,74,.1); border-bottom:1px solid rgba(184,137,74,.1); }
+.feat { padding:28px 30px; border-right:1px solid rgba(184,137,74,.1); display:flex; flex-direction:column; gap:10px; }
+.feat:last-child { border-right:none; }
+.feat-icon { font-size:1.6rem; }
+.feat-title { font-family:'Syne',sans-serif; font-weight:700; font-size:.84rem; color:var(--ink); letter-spacing:.5px; }
+.feat-desc { font-size:.78rem; color:var(--muted); line-height:1.5; }
+
+#feedback { background:var(--parchment); }
+.fb-grid { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:start; }
+.fb-form-wrap h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:1.05rem; color:var(--ink); margin-bottom:24px; }
+.fb-form { display:flex; flex-direction:column; gap:16px; }
+.fg label { display:block; font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.fg input, .fg textarea { width:100%; background:var(--white); border:1.5px solid rgba(184,137,74,.2); color:var(--ink); padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:.92rem; outline:none; transition:border-color .3s; box-shadow:0 2px 8px rgba(184,137,74,.05); }
+.fg input:focus, .fg textarea:focus { border-color:var(--wind); box-shadow:0 2px 12px rgba(184,137,74,.15); }
+.fg textarea { resize:vertical; min-height:110px; }
+.stars-row { display:flex; gap:8px; }
+.star { font-size:1.5rem; cursor:none; color:rgba(184,137,74,.25); transition:color .2s; }
+.star.on { color:var(--accent); }
+.reviews-side h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:1.05rem; color:var(--ink); margin-bottom:24px; }
+.reviews-list { display:flex; flex-direction:column; gap:18px; max-height:500px; overflow-y:auto; padding-right:6px; }
+.reviews-list::-webkit-scrollbar { width:3px; }
+.reviews-list::-webkit-scrollbar-thumb { background:var(--wind-l); }
+.rv { background:var(--white); border:1px solid rgba(184,137,74,.12); border-left:3px solid var(--wind); padding:18px 20px; box-shadow:0 2px 12px rgba(184,137,74,.06); }
+.rv-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.rv-name { font-family:'Syne',sans-serif; font-weight:700; font-size:.86rem; color:var(--ink); }
+.rv-stars { color:var(--accent); font-size:.8rem; }
+.rv-text { font-size:.82rem; color:var(--ink3); line-height:1.65; }
+.rv-date { font-size:.68rem; color:var(--muted-l); margin-top:7px; }
+
+/* ── ORDER TRACKER ── */
+.tracker-section { background:var(--bg2); padding:70px 52px; border-top:1px solid rgba(184,137,74,.1); }
+.tracker-box { max-width:560px; margin:0 auto; }
+.tracker-box h2 { font-family:'Bebas Neue',sans-serif; font-size:2.5rem; letter-spacing:3px; color:var(--ink); margin-bottom:8px; }
+.tracker-box p { font-size:.84rem; color:var(--muted); margin-bottom:24px; }
+.tracker-input-row { display:flex; gap:10px; }
+.tracker-in { flex:1; background:var(--white); border:1.5px solid rgba(184,137,74,.25); color:var(--ink); padding:13px 16px; font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none; transition:border-color .3s; text-transform:uppercase; letter-spacing:2px; }
+.tracker-in:focus { border-color:var(--wind); }
+.tracker-btn { background:var(--wind); color:var(--white); border:none; padding:13px 26px; font-family:'Syne',sans-serif; font-size:.72rem; letter-spacing:3px; text-transform:uppercase; font-weight:700; cursor:none; transition:all .3s; }
+.tracker-btn:hover { background:var(--wind-d); }
+.tracker-result { margin-top:20px; }
+.track-card { background:var(--white); border:1px solid rgba(184,137,74,.15); border-left:4px solid var(--wind); padding:20px 22px; box-shadow:0 4px 20px rgba(184,137,74,.08); }
+.track-ref { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:3px; color:var(--wind); margin-bottom:12px; }
+.track-row { display:flex; gap:8px; align-items:baseline; margin-bottom:6px; font-size:.82rem; }
+.track-lbl { font-family:'Syne',sans-serif; font-size:.6rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); min-width:80px; }
+.track-val { color:var(--ink); }
+.status-pill { display:inline-block; padding:4px 12px; font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; border-radius:2px; }
+.sp-Pending    { background:rgba(201,149,46,.12); color:#a07820; border:1px solid rgba(201,149,46,.3); }
+.sp-Processing { background:rgba(41,128,185,.1);  color:#1a6a9e; border:1px solid rgba(41,128,185,.25); }
+.sp-Shipped    { background:rgba(184,137,74,.12);  color:var(--wind-d); border:1px solid rgba(184,137,74,.3); }
+.sp-Delivered  { background:rgba(45,122,79,.1);   color:var(--green); border:1px solid rgba(45,122,79,.25); }
+.sp-Cancelled  { background:rgba(179,58,42,.1);   color:var(--red); border:1px solid rgba(179,58,42,.25); }
+.track-steps { display:flex; gap:0; margin-top:20px; }
+.tstep { flex:1; text-align:center; position:relative; }
+.tstep::before { content:''; position:absolute; top:14px; left:50%; right:-50%; height:2px; background:rgba(184,137,74,.15); z-index:0; }
+.tstep:last-child::before { display:none; }
+.tstep-dot { width:28px; height:28px; border-radius:50%; border:2px solid rgba(184,137,74,.2); background:var(--white); margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-size:.7rem; position:relative; z-index:1; transition:all .3s; }
+.tstep.done .tstep-dot { background:var(--wind); border-color:var(--wind); color:var(--white); }
+.tstep.done::before { background:var(--wind); }
+.tstep-lbl { font-family:'Syne',sans-serif; font-size:.58rem; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+.tstep.done .tstep-lbl { color:var(--wind); }
+.track-error { color:var(--red); font-size:.84rem; padding:14px; background:rgba(179,58,42,.06); border:1px solid rgba(179,58,42,.15); }
+
+footer { background:var(--ink); padding:60px 52px 28px; color:rgba(255,255,255,.7); }
+.footer-top { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:52px; margin-bottom:44px; }
+.fl-logo { font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:6px; color:var(--white); margin-bottom:14px; }
+.fl-logo em { color:var(--wind-l); font-style:normal; }
+.fl-desc { font-size:.82rem; line-height:1.75; color:rgba(255,255,255,.5); }
+.fl-email { margin-top:14px; font-size:.78rem; color:var(--wind-l); }
+.fc h4 { font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:4px; text-transform:uppercase; color:var(--wind-l); margin-bottom:16px; }
+.fc ul { list-style:none; display:flex; flex-direction:column; gap:9px; }
+.fc a { color:rgba(255,255,255,.45); font-size:.82rem; text-decoration:none; transition:color .3s; }
+.fc a:hover { color:var(--white); }
+.footer-bottom { border-top:1px solid rgba(255,255,255,.06); padding-top:22px; display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:rgba(255,255,255,.3); }
+.footer-bottom span.brand { color:var(--wind-l); }
+
+.cart-overlay { position:fixed; inset:0; background:rgba(26,18,8,.5); z-index:9000; opacity:0; pointer-events:none; transition:opacity .4s; }
+.cart-overlay.open { opacity:1; pointer-events:all; }
+.cart-drawer { position:fixed; top:0; right:-560px; width:520px; height:100vh; background:var(--white); border-left:1px solid rgba(184,137,74,.15); z-index:9001; transition:right .5s cubic-bezier(.25,.46,.45,.94); display:flex; flex-direction:column; cursor:none; box-shadow:-8px 0 40px rgba(184,137,74,.1); }
+.cart-drawer.open { right:0; }
+.cart-hdr { padding:26px 28px 18px; border-bottom:1px solid rgba(184,137,74,.1); display:flex; align-items:center; justify-content:space-between; }
+.cart-hdr-title { font-family:'Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:4px; color:var(--ink); }
+.cx { background:none; border:none; color:var(--ink3); font-size:1.3rem; cursor:none; opacity:.5; transition:opacity .2s; }
+.cx:hover { opacity:1; }
+.cart-body { flex:1; overflow-y:auto; padding:16px 28px; }
+.cart-body::-webkit-scrollbar { width:3px; }
+.cart-body::-webkit-scrollbar-thumb { background:var(--wind-l); }
+.ci { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid rgba(184,137,74,.08); align-items:center; }
+.ci-img { width:64px; height:64px; background:var(--bg2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.3rem; border:1px solid rgba(184,137,74,.12); }
+.ci-info { flex:1; }
+.ci-name { font-family:'Syne',sans-serif; font-weight:700; font-size:.86rem; color:var(--ink); margin-bottom:3px; }
+.ci-size { font-size:.72rem; color:var(--muted); margin-bottom:6px; }
+.ci-price { font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:var(--wind); letter-spacing:2px; }
+.ci-ctl { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.qty-row { display:flex; align-items:center; gap:8px; }
+.qb { width:26px; height:26px; border:1.5px solid rgba(184,137,74,.25); background:transparent; color:var(--ink3); cursor:none; font-size:.9rem; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.qb:hover { border-color:var(--wind); color:var(--wind); background:var(--wind-xl); }
+.qn { font-family:'Syne',sans-serif; font-weight:700; min-width:18px; text-align:center; font-size:.86rem; color:var(--ink); }
+.rm { background:none; border:none; color:var(--red); cursor:none; font-size:.72rem; opacity:.5; transition:opacity .2s; }
+.rm:hover { opacity:1; }
+.cart-ftr { padding:16px 28px 24px; border-top:1px solid rgba(184,137,74,.08); }
+.coupon-row { display:flex; gap:8px; margin-bottom:16px; }
+.coupon-in { flex:1; background:var(--bg2); border:1.5px solid rgba(184,137,74,.2); color:var(--ink); padding:11px 13px; font-family:'DM Sans',sans-serif; font-size:.82rem; outline:none; text-transform:uppercase; letter-spacing:2px; cursor:none; }
+.coupon-in:focus { border-color:var(--wind); }
+.coupon-go { background:var(--wind); color:var(--white); border:none; padding:11px 18px; font-family:'Syne',sans-serif; font-size:.66rem; letter-spacing:2px; text-transform:uppercase; cursor:none; transition:all .3s; font-weight:700; }
+.coupon-go:hover { background:var(--wind-d); }
+.coupon-msg { font-size:.74rem; margin-bottom:10px; }
+.coupon-msg.ok { color:var(--green); }
+.coupon-msg.no { color:var(--red); }
+.sum-row { display:flex; justify-content:space-between; font-size:.82rem; color:var(--muted); margin-bottom:6px; }
+.sum-row .v { color:var(--wind); font-weight:600; }
+.sum-total { color:var(--ink) !important; font-family:'Syne',sans-serif; font-weight:700; font-size:.96rem; border-top:1.5px solid rgba(184,137,74,.15); padding-top:10px; margin-top:10px; }
+.sum-total .v { color:var(--ink) !important; }
+.disc-v { color:var(--green) !important; }
+.chk-btn { width:100%; background:var(--wind); color:var(--white); padding:16px; font-family:'Bebas Neue',sans-serif; font-size:1.05rem; letter-spacing:5px; border:none; cursor:none; transition:all .3s; margin-top:14px; box-shadow:0 6px 20px rgba(184,137,74,.35); }
+.chk-btn:hover { background:var(--wind-d); transform:translateY(-1px); }
+.empty-cart { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); gap:12px; font-family:'Syne',sans-serif; letter-spacing:2px; text-transform:uppercase; font-size:.74rem; }
+.empty-icon { font-size:2.5rem; opacity:.3; }
+
+.modal-bg { position:fixed; inset:0; background:rgba(26,18,8,.65); z-index:9200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .35s; }
+.modal-bg.open { opacity:1; pointer-events:all; }
+.modal-box { background:var(--white); border:1px solid rgba(184,137,74,.2); width:92%; max-width:580px; max-height:90vh; overflow-y:auto; padding:36px; transform:translateY(16px); transition:transform .35s; box-shadow:0 24px 80px rgba(184,137,74,.2); }
+.modal-bg.open .modal-box { transform:none; }
+.modal-box h2 { font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:4px; color:var(--ink); margin-bottom:26px; }
+.mg { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.mg .full { grid-column:1/-1; }
+.fg2 { display:flex; flex-direction:column; gap:7px; }
+.fg2 label { font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); }
+.fg2 input { background:var(--bg2); border:1.5px solid rgba(184,137,74,.2); color:var(--ink); padding:12px 14px; font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none; transition:border-color .3s; }
+.fg2 input:focus { border-color:var(--wind); }
+.pay-lbl { font-family:'Syne',sans-serif; font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin:22px 0 10px; }
+.pay-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.pm { background:var(--bg2); border:1.5px solid rgba(184,137,74,.15); padding:14px 8px; text-align:center; cursor:none; transition:all .3s; font-family:'Syne',sans-serif; font-size:.68rem; letter-spacing:1px; color:var(--muted); }
+.pm .pi { font-size:1.4rem; margin-bottom:5px; }
+.pm:hover, .pm.on { border-color:var(--wind); color:var(--wind); background:var(--wind-xl); }
+.bank-info { display:none; background:var(--bg2); border:1.5px solid rgba(184,137,74,.15); padding:14px; margin:12px 0; font-size:.8rem; line-height:1.9; color:var(--muted); }
+.bank-info strong { color:var(--wind); font-family:'Syne',sans-serif; font-size:.66rem; letter-spacing:2px; text-transform:uppercase; }
+.modal-total { background:var(--wind-xl); border:1.5px solid rgba(184,137,74,.25); padding:16px; margin:16px 0; font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:3px; text-align:center; color:var(--wind); }
+.place-btn { width:100%; background:var(--wind); color:var(--white); padding:16px; font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:5px; border:none; cursor:none; transition:all .3s; margin-top:8px; box-shadow:0 6px 20px rgba(184,137,74,.35); }
+.place-btn:hover { background:var(--wind-d); }
+.place-btn:disabled { opacity:.5; cursor:not-allowed; }
+.back-btn { width:100%; background:none; border:1.5px solid rgba(184,137,74,.2); color:var(--muted); padding:11px; font-family:'Syne',sans-serif; font-size:.68rem; letter-spacing:2px; text-transform:uppercase; cursor:none; transition:all .3s; margin-top:8px; }
+.back-btn:hover { border-color:var(--wind); color:var(--wind); }
+.suc-wrap { text-align:center; padding:48px 32px; }
+.suc-icon { font-size:3.5rem; margin-bottom:16px; animation:bIn .6s ease; }
+@keyframes bIn { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+.suc-title { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:4px; color:var(--green); margin-bottom:12px; }
+.suc-p { color:var(--muted); line-height:1.7; font-size:.9rem; }
+.suc-ref { margin:16px 0; padding:13px; background:rgba(45,122,79,.07); border:1.5px solid rgba(45,122,79,.2); font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:4px; color:var(--green); }
+
+/* Connection status badge */
+.conn-badge { display:none; position:fixed; bottom:20px; right:20px; z-index:9998; padding:7px 16px; font-family:'Syne',sans-serif; font-size:.6rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; border-radius:2px; }
+.conn-badge.live { display:flex; align-items:center; gap:6px; background:rgba(45,122,79,.1); border:1px solid rgba(45,122,79,.3); color:var(--green); }
+.conn-badge.offline { display:flex; align-items:center; gap:6px; background:rgba(201,149,46,.1); border:1px solid rgba(201,149,46,.3); color:#a07820; }
+.conn-dot { width:6px; height:6px; border-radius:50%; background:currentColor; animation:pulse 1.5s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+
+#toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--ink); color:var(--white); padding:12px 28px; font-family:'Syne',sans-serif; font-size:.74rem; letter-spacing:2px; text-transform:uppercase; font-weight:700; z-index:999999; transition:transform .4s; white-space:nowrap; box-shadow:0 8px 28px rgba(0,0,0,.25); }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+@media(max-width:900px) { .about-band{grid-template-columns:1fr;gap:36px} .features{grid-template-columns:1fr 1fr} .fb-grid{grid-template-columns:1fr;gap:40px} .footer-top{grid-template-columns:1fr 1fr;gap:32px} }
+@media(max-width:680px) { nav{padding:14px 20px} .nav-links{display:none} section{padding:60px 20px} .hero{padding:100px 20px 60px} .hero-title{font-size:5rem} .hero-float{display:none} .features{grid-template-columns:1fr} .products-grid{grid-template-columns:1fr 1fr;gap:14px} .cart-drawer{width:100%;right:-100%} .mg{grid-template-columns:1fr} .pay-grid{grid-template-columns:1fr 1fr} .footer-top{grid-template-columns:1fr} .about-band{padding:50px 20px} .features{padding:40px 20px} .tracker-input-row{flex-direction:column} .tracker-section{padding:50px 20px} }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="curf"></div>
+<div class="conn-badge" id="connBadge"><span class="conn-dot"></span><span id="connText">Connected</span></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">W<em>I</em>NDY</a>
+  <ul class="nav-links">
+    <li><a href="#products">Collection</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#feedback">Reviews</a></li>
+    <li><a href="#tracker">Track Order</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="openCart()">Cart <span id="cartCount">0</span></button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div><div class="hero-pattern"></div><div class="hero-blob"></div><div class="hero-blob2"></div><div class="hero-line"></div><div class="hero-line2"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="eyebrow-line"></span>Sri Lanka's Finest Streetwear</div>
+    <h1 class="hero-title">WIN<span class="stroke">DY</span></h1>
+    <p class="hero-tagline">Move With The Flow</p>
+    <div class="hero-actions">
+      <a href="#products" class="btn-main">Shop Now</a>
+      <a href="#about" class="btn-ghost">Our Story</a>
+    </div>
+  </div>
+  <div class="hero-float"><div class="float-num">500+</div><div class="float-lbl">Orders Shipped</div></div>
+  <div class="hero-scroll"><span class="scroll-bar"></span>Scroll Down</div>
+</section>
+
+<div class="marquee-strip"><div class="marquee-inner" id="mqEl"></div></div>
+
+<section id="products">
+  <div class="sec-hd">
+    <div><div class="sec-label">New Drop</div><h2 class="sec-title">The Collection</h2></div>
+    <a href="#" class="sec-link">View All →</a>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<div class="features">
+  <div class="feat"><div class="feat-icon">✂️</div><div class="feat-title">Premium Quality</div><div class="feat-desc">100% cotton, pre-shrunk, heavy GSM fabrics built to last.</div></div>
+  <div class="feat"><div class="feat-icon">🖨️</div><div class="feat-title">Custom Printing</div><div class="feat-desc">Your name, our craft. Heat-pressed WINDY prints that don't fade.</div></div>
+  <div class="feat"><div class="feat-icon">🚚</div><div class="feat-title">Island Delivery</div><div class="feat-desc">LKR 300 flat shipping across Sri Lanka. 3–5 business days.</div></div>
+  <div class="feat"><div class="feat-icon">🔄</div><div class="feat-title">Easy Returns</div><div class="feat-desc">7-day hassle-free returns. Your satisfaction is everything.</div></div>
+</div>
+
+<div class="about-band" id="about">
+  <div>
+    <h2>BORN FROM<br>THE <span>BREEZE</span></h2>
+    <p>WINDY was born on the streets of Sri Lanka — a brand that moves like the wind, free and unstoppable. Every piece is crafted with premium quality and stamped with our signature name.</p>
+    <div class="about-stats">
+      <div class="astat"><h3>100%</h3><p>Sri Lankan</p></div>
+      <div class="astat"><h3>500+</h3><p>Happy Orders</p></div>
+      <div class="astat"><h3>★ 4.9</h3><p>Rated</p></div>
+    </div>
+  </div>
+  <div class="about-img-side">
+    <div class="about-logo-big">WINDY</div>
+    <div class="about-tagline-big">Move With The Flow</div>
+    <div class="about-divider"></div>
+    <div class="about-detail">From hoodies to tees, caps to joggers — we print your identity on every piece. This isn't just clothing. This is a lifestyle built in Sri Lanka.</div>
+  </div>
+</div>
+
+<!-- ORDER TRACKER -->
+<div class="tracker-section" id="tracker">
+  <div class="tracker-box">
+    <h2>Track Your Order</h2>
+    <p>Enter your order reference number to see live delivery status.</p>
+    <div class="tracker-input-row">
+      <input class="tracker-in" id="trackIn" placeholder="WINDY-XXXXXX" maxlength="20">
+      <button class="tracker-btn" onclick="trackOrder()">Track →</button>
+    </div>
+    <div class="tracker-result" id="trackerResult"></div>
+  </div>
+</div>
+
+<section id="feedback">
+  <div class="sec-hd"><div><div class="sec-label">Community</div><h2 class="sec-title">What They Say</h2></div></div>
+  <div class="fb-grid">
+    <div class="fb-form-wrap">
+      <h3>Leave a Review</h3>
+      <div class="fb-form">
+        <div class="fg"><label>Your Name</label><input type="text" id="fbName" placeholder="Your name"></div>
+        <div class="fg"><label>Email</label><input type="email" id="fbEmail" placeholder="your@email.com"></div>
+        <div class="fg">
+          <label>Rating</label>
+          <div class="stars-row" id="starsRow">
+            <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+            <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span>
+          </div>
+        </div>
+        <div class="fg"><label>Your Review</label><textarea id="fbMsg" placeholder="Tell us about your experience with WINDY..."></textarea></div>
+        <button class="btn-main" style="border:none;cursor:none;width:100%;text-align:center;" onclick="submitReview()">Send Review →</button>
+      </div>
+    </div>
+    <div class="reviews-side">
+      <h3>Customer Reviews</h3>
+      <div class="reviews-list" id="reviewsList"><div style="color:var(--muted);font-size:.8rem;padding:20px 0;">Loading reviews…</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="fl-logo">W<em>I</em>NDY</div>
+      <p class="fl-desc">Sri Lanka's premier printed streetwear brand. Move with the flow. Wear your name. Own your style.</p>
+      <div class="fl-email">📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ed9a848389948e8182998584838a8186ad8a808c8481c38e8280">[email&#160;protected]</a></div>
+    </div>
+    <div class="fc"><h4>Collection</h4><ul><li><a href="#">T-Shirts</a></li><li><a href="#">Hoodies</a></li><li><a href="#">Caps</a></li><li><a href="#">Joggers</a></li></ul></div>
+    <div class="fc"><h4>Info</h4><ul><li><a href="#">Size Guide</a></li><li><a href="#">Shipping Policy</a></li><li><a href="#">Returns</a></li><li><a href="#tracker">Track Order</a></li></ul></div>
+    <div class="fc"><h4>Connect</h4><ul><li><a href="#">Instagram</a></li><li><a href="#">TikTok</a></li><li><a href="#">Facebook</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 WINDY Clothing Sri Lanka. All rights reserved.</span>
+    <span class="brand">Move With The Flow</span>
+  </div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-hdr"><span class="cart-hdr-title">YOUR CART</span><button class="cx" onclick="closeCart()">✕</button></div>
+  <div class="cart-body" id="cartBody"></div>
+  <div id="cartFtr" style="display:none;" class="cart-ftr">
+    <div class="coupon-row">
+      <input class="coupon-in" id="couponIn" placeholder="COUPON CODE" maxlength="20">
+      <button class="coupon-go" onclick="applyCoupon()">Apply</button>
+    </div>
+    <div class="coupon-msg" id="couponMsg"></div>
+    <div class="sum-row"><span>Subtotal</span><span class="v" id="subEl">LKR 0</span></div>
+    <div class="sum-row" id="discRow" style="display:none;"><span>Discount</span><span class="v disc-v" id="discEl">-LKR 0</span></div>
+    <div class="sum-row"><span>Shipping</span><span class="v">LKR 300</span></div>
+    <div class="sum-row sum-total"><span>Total</span><span class="v" id="totEl">LKR 300</span></div>
+    <button class="chk-btn" onclick="openCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-bg" id="chkModal">
+  <div class="modal-box">
+    <h2>Checkout</h2>
+    <div class="mg">
+      <div class="fg2"><label>First Name</label><input id="chkFirst" placeholder="Kasun"></div>
+      <div class="fg2"><label>Last Name</label><input id="chkLast" placeholder="Perera"></div>
+      <div class="fg2 full"><label>Email</label><input type="email" id="chkEmail" placeholder="kasun@email.com"></div>
+      <div class="fg2 full"><label>Phone</label><input type="tel" id="chkPhone" placeholder="0771234567"></div>
+      <div class="fg2 full"><label>Delivery Address</label><input id="chkAddr" placeholder="No.12, Galle Road, Colombo 03"></div>
+      <div class="fg2"><label>City</label><input id="chkCity" placeholder="Colombo"></div>
+      <div class="fg2"><label>Postal Code</label><input id="chkPostal" placeholder="00300"></div>
+    </div>
+    <div class="pay-lbl">Payment Method</div>
+    <div class="pay-grid">
+      <div class="pm on" onclick="selPay(this,'Cash on Delivery')"><div class="pi">💵</div>Cash on Delivery</div>
+      <div class="pm" onclick="selPay(this,'Bank Transfer')"><div class="pi">🏦</div>Bank Transfer</div>
+      <div class="pm" onclick="selPay(this,'Card Payment')"><div class="pi">💳</div>Card / Online</div>
+    </div>
+    <div class="bank-info" id="bankInfo">
+      <strong>Bank Details</strong><br>
+      Bank: Bank of Ceylon<br>Account Name: WINDY Clothing<br>Account No: 8001234567<br>Branch: Colombo
+    </div>
+    <div class="modal-total" id="chkTotalEl">Total: LKR 0</div>
+    <button class="place-btn" id="placeBtn" onclick="placeOrder()">Place Order →</button>
+    <button class="back-btn" onclick="closeCheckout()">← Back to Cart</button>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-bg" id="sucModal">
+  <div class="modal-box">
+    <div class="suc-wrap">
+      <div class="suc-icon">✅</div>
+      <div class="suc-title">Order Placed!</div>
+      <p class="suc-p">Thank you for shopping with WINDY. Your order has been received and is being processed.</p>
+      <div class="suc-ref" id="sucRef">ORDER #WINDY-000</div>
+      <p class="suc-p" style="margin-top:6px;font-size:.78rem;">Save your order number to track delivery status.</p>
+      <p class="suc-p" style="font-size:.78rem;margin-top:4px;">Estimated delivery: 3–5 business days.</p>
+      <button class="btn-main" style="border:none;cursor:none;margin-top:26px;" onclick="closeSuc()">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ══════ GOOGLE SHEETS URL ══════
+   Paste your Apps Script Web App URL here.
+   Same URL goes in windy-admin.html too.
+═══════════════════════════════════════ */
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwEWKp_Fv48nMlIngxknpPDhXRlK_W_VTgKjkob2BJsm3-c4NAn1C-8QZ5uBLPDpUBq/exec';
+
+/* ══════ CONFIG ══════ */
+const COUPONS = { WINDY10:10, FLOW20:20, LAUNCH30:30, VIP50:50 };
+const PRODUCTS = [
+  { id:1, name:'WINDY Classic Tee',   desc:'Signature printed name tee — 100% cotton', price:2500, cat:'T-Shirt', badge:'Best Seller', icon:'👕', bg:'#f0e8dc', sizes:['S','M','L','XL','XXL'] },
+  { id:2, name:'WINDY Drift Hoodie',  desc:'Premium fleece, embossed Windy logo',      price:4800, cat:'Hoodie',  badge:'New Drop',   icon:'🧥', bg:'#e8ddd0', sizes:['S','M','L','XL'] },
+  { id:3, name:'WINDY Flow Cap',      desc:'Structured snapback, embroidered logo',    price:1800, cat:'Cap',     badge:'',           icon:'🧢', bg:'#f4ede4', sizes:['One Size'] },
+  { id:4, name:'WINDY Breeze Jogger', desc:'Relaxed fit, side-printed WINDY text',     price:3600, cat:'Jogger',  badge:'',           icon:'👖', bg:'#ede3d8', sizes:['S','M','L','XL','XXL'] },
+  { id:5, name:'WINDY Oversized Tee', desc:'Drop-shoulder, heavy 240gsm cotton',       price:3200, cat:'T-Shirt', badge:'Hot',        icon:'👕', bg:'#e6ddd4', sizes:['S','M','L','XL'] },
+  { id:6, name:'WINDY Zip Hoodie',    desc:'Full-zip fleece, kangaroo pocket',         price:5500, cat:'Hoodie',  badge:'Limited',    icon:'🧥', bg:'#dfd6cb', sizes:['S','M','L','XL'] },
+];
+const DEFAULT_REVIEWS = [
+  { name:'Kasun P.',   rating:5, text:'Absolutely love my WINDY hoodie! Quality is insane for the price. Will definitely order again!', date:'March 2025' },
+  { name:'Dilini R.',  rating:5, text:'Got the oversized tee and cap combo — moves with the flow just like they say. Fast delivery!',   date:'February 2025' },
+  { name:'Thisaru M.', rating:4, text:'Really nice quality. The WINDY print on the hoodie is premium. Still a 5 star brand!',          date:'January 2025' },
+];
+
+/* ══════ STATE ══════ */
+let cart = JSON.parse(localStorage.getItem('wCart')||'[]');
+let appliedCoupon = null, selPayment = 'Cash on Delivery', selRating = 0;
+let selSizes = {}, allReviews = [];
+const useSheets = SHEET_URL && !SHEET_URL.includes('PASTE_YOUR');
+
+/* ══════ SHEETS HELPERS ══════ */
+async function sheetPost(data) {
+  if (!useSheets) return null;
+  // Use a hidden form POST — bypasses CORS completely for Google Apps Script
+  return new Promise((resolve) => {
+    try {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = SHEET_URL;
+      form.target = '_blank_sheet_' + Date.now();
+      form.style.display = 'none';
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'data';
+      input.value = JSON.stringify(data);
+      form.appendChild(input);
+      // Also try fetch with no-cors as backup
+      fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(data)
+      }).catch(() => {});
+      document.body.appendChild(form);
+      setTimeout(() => { document.body.removeChild(form); }, 2000);
+      resolve({ ok: true });
+    } catch(e) {
+      resolve({ ok: true }); // never fail
+    }
+  });
+}
+async function sheetGet(type) {
+  if (!useSheets) return null;
+  const r = await fetch(`${SHEET_URL}?type=${type}&t=${Date.now()}`);
+  return r.json();
+}
+
+/* ══════ CONNECTION STATUS ══════ */
+function setConnected(live) {
+  const badge = document.getElementById('connBadge');
+  const text  = document.getElementById('connText');
+  badge.className = 'conn-badge ' + (live ? 'live' : 'offline');
+  text.textContent = live ? 'Live — Data Saved' : 'Demo Mode — Setup Required';
+}
+setConnected(useSheets);
+
+/* ══════ CURSOR ══════ */
+const curEl = document.getElementById('cur'), curfEl = document.getElementById('curf');
+document.addEventListener('mousemove', e => {
+  curEl.style.cssText  = `left:${e.clientX-4.5}px;top:${e.clientY-4.5}px;`;
+  setTimeout(() => curfEl.style.cssText = `left:${e.clientX-15}px;top:${e.clientY-15}px;`, 80);
+});
+
+/* ══════ NAV ══════ */
+window.addEventListener('scroll', () => document.getElementById('nav').classList.toggle('scrolled', scrollY > 50));
+
+/* ══════ MARQUEE ══════ */
+const mqEl = document.getElementById('mqEl');
+const mqT = ['WINDY','·','MOVE WITH THE FLOW','·','SRI LANKA','·','STREETWEAR','·','NEW DROP','·','FREE DELIVERY','·'];
+let mqH = '';
+for (let i=0;i<4;i++) mqT.forEach(t => mqH += `<span class="${t==='·'?'sep':''}">${t}</span>`);
+mqEl.innerHTML = mqH;
+
+/* ══════ PRODUCTS ══════ */
+function clothSVG(p) {
+  const c = '#b8894a', bg = p.bg;
+  if (p.cat==='T-Shirt'||p.cat==='Hoodie') return `
+    <svg viewBox="0 0 200 240" width="130" xmlns="http://www.w3.org/2000/svg">
+      <path d="M60,20 L30,52 L8,46 L18,92 L50,86 L50,222 L150,222 L150,86 L182,92 L192,46 L170,52 L140,20 Q120,8 100,10 Q80,8 60,20Z" fill="${bg}" stroke="${c}" stroke-width="1.2" stroke-opacity=".5"/>
+      <text x="100" y="132" text-anchor="middle" fill="${c}" font-family="'Bebas Neue',sans-serif" font-size="24" letter-spacing="4" font-weight="bold">WINDY</text>
+      <text x="100" y="152" text-anchor="middle" fill="${c}" font-family="sans-serif" font-size="6.5" letter-spacing="3" opacity=".6">MOVE WITH THE FLOW</text>
+    </svg>`;
+  if (p.cat==='Cap') return `
+    <svg viewBox="0 0 200 160" width="120" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22,100 Q18,38 100,33 Q182,38 178,100 L168,106 Q100,116 32,106Z" fill="${bg}" stroke="${c}" stroke-width="1.2" stroke-opacity=".5"/>
+      <path d="M32,106 Q18,112 8,122 Q60,130 100,127 Q140,130 192,122 Q182,112 168,106" fill="${bg}" stroke="${c}" stroke-width=".8" stroke-opacity=".3"/>
+      <text x="100" y="80" text-anchor="middle" fill="${c}" font-family="'Bebas Neue',sans-serif" font-size="19" letter-spacing="4">WINDY</text>
+    </svg>`;
+  return `
+    <svg viewBox="0 0 200 260" width="120" xmlns="http://www.w3.org/2000/svg">
+      <path d="M68,12 L62,132 L52,258 L96,258 L100,162 L104,258 L148,258 L138,132 L132,12Z" fill="${bg}" stroke="${c}" stroke-width="1" stroke-opacity=".4"/>
+      <text x="40" y="118" text-anchor="middle" fill="${c}" font-family="'Bebas Neue',sans-serif" font-size="13" letter-spacing="3" transform="rotate(-90,40,118)">WINDY</text>
+    </svg>`;
+}
+function renderProducts() {
+  document.getElementById('productsGrid').innerHTML = PRODUCTS.map(p => `
+    <div class="product-card">
+      <div class="p-img-wrap">
+        <div class="p-img" style="background:${p.bg};">${clothSVG(p)}</div>
+        ${p.badge?`<div class="p-badge">${p.badge}</div>`:''}
+        <div class="p-overlay"><button class="add-btn" onclick="addToCart(${p.id})">Add to Cart</button></div>
+      </div>
+      <div class="p-info">
+        <div class="p-name">${p.name}</div>
+        <div class="p-desc">${p.desc}</div>
+        <div class="p-footer">
+          <div class="p-price">LKR ${p.price.toLocaleString()}</div>
+          <div class="p-sizes">${p.sizes.map(s=>`<button class="sz" onclick="pickSz(${p.id},'${s}',this)">${s}</button>`).join('')}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function pickSz(id,s,btn) {
+  event.stopPropagation();
+  btn.closest('.product-card').querySelectorAll('.sz').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); selSizes[id]=s;
+}
+renderProducts();
+
+/* ══════ REVIEWS — LOAD FROM SHEETS ══════ */
+async function loadReviews() {
+  let live = [];
+  try {
+    if (useSheets) {
+      live = await sheetGet('reviews') || [];
+    }
+  } catch(e) {}
+  const stored = JSON.parse(localStorage.getItem('windyReviews')||'[]');
+  allReviews = [...live, ...stored, ...DEFAULT_REVIEWS];
+  renderReviews();
+}
+
+function renderReviews() {
+  document.getElementById('reviewsList').innerHTML = allReviews.map(r => `
+    <div class="rv">
+      <div class="rv-head"><span class="rv-name">${r.name}</span><span class="rv-stars">${'★'.repeat(r.rating||0)}${'☆'.repeat(5-(r.rating||0))}</span></div>
+      <div class="rv-text">${r.text}</div>
+      <div class="rv-date">${r.date}</div>
+    </div>`).join('');
+}
+loadReviews();
+
+/* ══════ CART ══════ */
+function addToCart(id) {
+  const p = PRODUCTS.find(x=>x.id===id);
+  const size = selSizes[id]||p.sizes[0];
+  const ex = cart.find(i=>i.id===id&&i.size===size);
+  ex ? ex.qty++ : cart.push({...p,size,qty:1});
+  localStorage.setItem('wCart',JSON.stringify(cart));
+  updateCartUI(); toast(`${p.name} added!`); openCart();
+}
+const getSub  = () => cart.reduce((s,i)=>s+i.price*i.qty,0);
+const getDisc = () => appliedCoupon ? Math.round(getSub()*COUPONS[appliedCoupon]/100) : 0;
+const getTot  = () => getSub()-getDisc()+300;
+
+function updateCartUI() {
+  const count = cart.reduce((s,i)=>s+i.qty,0);
+  const cc = document.getElementById('cartCount');
+  cc.textContent = count; cc.style.display = count>0?'flex':'none';
+  const body = document.getElementById('cartBody');
+  const ftr  = document.getElementById('cartFtr');
+  if (!cart.length) {
+    body.innerHTML='<div class="empty-cart"><div class="empty-icon">🛒</div><span>Your cart is empty</span></div>';
+    ftr.style.display='none'; return;
+  }
+  ftr.style.display='block';
+  body.innerHTML = cart.map((item,i)=>`
+    <div class="ci">
+      <div class="ci-img">${item.icon}</div>
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-size">Size: ${item.size}</div>
+        <div class="ci-price">LKR ${(item.price*item.qty).toLocaleString()}</div>
+      </div>
+      <div class="ci-ctl">
+        <div class="qty-row">
+          <button class="qb" onclick="chgQty(${i},-1)">−</button>
+          <span class="qn">${item.qty}</span>
+          <button class="qb" onclick="chgQty(${i},1)">+</button>
+        </div>
+        <button class="rm" onclick="rmItem(${i})">✕ Remove</button>
+      </div>
+    </div>`).join('');
+  updateTotals();
+}
+function chgQty(i,d){ cart[i].qty=Math.max(1,cart[i].qty+d); localStorage.setItem('wCart',JSON.stringify(cart)); updateCartUI(); }
+function rmItem(i){ cart.splice(i,1); localStorage.setItem('wCart',JSON.stringify(cart)); updateCartUI(); }
+function updateTotals() {
+  const s=getSub(),d=getDisc(),t=getTot();
+  document.getElementById('subEl').textContent=`LKR ${s.toLocaleString()}`;
+  document.getElementById('totEl').textContent=`LKR ${t.toLocaleString()}`;
+  document.getElementById('chkTotalEl').textContent=`Total: LKR ${t.toLocaleString()}`;
+  document.getElementById('discRow').style.display=d>0?'flex':'none';
+  if(d>0) document.getElementById('discEl').textContent=`-LKR ${d.toLocaleString()}`;
+}
+function applyCoupon() {
+  const code=document.getElementById('couponIn').value.trim().toUpperCase();
+  const msg=document.getElementById('couponMsg');
+  if(COUPONS[code]){ appliedCoupon=code; msg.textContent=`✓ ${COUPONS[code]}% discount applied!`; msg.className='coupon-msg ok'; }
+  else { appliedCoupon=null; msg.textContent='✗ Invalid coupon code'; msg.className='coupon-msg no'; }
+  updateTotals();
+}
+function openCart()  { document.getElementById('cartDrawer').classList.add('open'); document.getElementById('cartOverlay').classList.add('open'); updateCartUI(); }
+function closeCart() { document.getElementById('cartDrawer').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('open'); }
+
+/* ══════ CHECKOUT ══════ */
+function openCheckout()  { if(!cart.length)return; closeCart(); updateTotals(); document.getElementById('chkModal').classList.add('open'); }
+function closeCheckout() { document.getElementById('chkModal').classList.remove('open'); openCart(); }
+function selPay(el,method) {
+  document.querySelectorAll('.pm').forEach(m=>m.classList.remove('on'));
+  el.classList.add('on'); selPayment=method;
+  document.getElementById('bankInfo').style.display = method==='Bank Transfer'?'block':'none';
+}
+
+async function placeOrder() {
+  const g = id => document.getElementById(id).value.trim();
+  const first=g('chkFirst'),last=g('chkLast'),email=g('chkEmail'),phone=g('chkPhone'),addr=g('chkAddr'),city=g('chkCity'),postal=g('chkPostal');
+  if (!first||!last||!email||!phone||!addr||!city) { toast('Please fill in all fields!'); return; }
+
+  const btn = document.getElementById('placeBtn');
+  btn.disabled = true; btn.textContent = 'Placing Order…';
+
+  const ref = 'WINDY-' + Date.now().toString().slice(-6);
+  const order = {
+    type:'order',
+    ref, date: new Date().toLocaleString('en-LK'),
+    customer: `${first} ${last}`, email, phone,
+    address: `${addr}, ${city} ${postal}`,
+    items: cart.map(i=>`${i.name} (${i.size}) x${i.qty}`).join('; '),
+    subtotal: getSub(), discount: getDisc(), shipping: 300, total: getTot(),
+    payment: selPayment, coupon: appliedCoupon||'None', status: 'Pending'
+  };
+
+  // Always save to localStorage first (instant, never fails)
+  const arr = JSON.parse(localStorage.getItem('windyOrders')||'[]');
+  arr.unshift({...order});
+  localStorage.setItem('windyOrders', JSON.stringify(arr));
+
+  // Also try to save to Google Sheets if URL is set
+  if (useSheets) {
+    try { await sheetPost(order); } catch(e) { /* Sheet save failed silently, order already in localStorage */ }
+  }
+
+  cart=[]; appliedCoupon=null;
+  localStorage.setItem('wCart','[]');
+  document.getElementById('chkModal').classList.remove('open');
+  document.getElementById('sucRef').textContent=`ORDER #${ref}`;
+  document.getElementById('sucModal').classList.add('open');
+  updateCartUI();
+  btn.disabled=false; btn.textContent='Place Order →';
+}
+function closeSuc() { document.getElementById('sucModal').classList.remove('open'); }
+
+/* ══════ ORDER TRACKER ══════ */
+async function trackOrder() {
+  const ref = document.getElementById('trackIn').value.trim().toUpperCase();
+  const result = document.getElementById('trackerResult');
+  if (!ref) { result.innerHTML='<div class="track-error">Please enter an order reference number.</div>'; return; }
+
+  result.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:16px 0;">Searching…</div>';
+
+  try {
+    let orders = [];
+    if (useSheets) {
+      orders = await sheetGet('orders') || [];
+    } else {
+      orders = JSON.parse(localStorage.getItem('windyOrders')||'[]');
+    }
+
+    const order = orders.find(o => (o.ref||'').toUpperCase() === ref);
+    if (!order) {
+      result.innerHTML='<div class="track-error">❌ Order not found. Please check your reference number.</div>'; return;
+    }
+
+    const steps = ['Pending','Processing','Shipped','Delivered'];
+    const si = steps.indexOf(order.status);
+    const isCancelled = order.status === 'Cancelled';
+
+    result.innerHTML = `
+      <div class="track-card">
+        <div class="track-ref">${order.ref}</div>
+        <div class="track-row"><span class="track-lbl">Customer</span><span class="track-val">${order.customer}</span></div>
+        <div class="track-row"><span class="track-lbl">Date</span><span class="track-val">${order.date}</span></div>
+        <div class="track-row"><span class="track-lbl">Items</span><span class="track-val">${order.items}</span></div>
+        <div class="track-row"><span class="track-lbl">Total</span><span class="track-val">LKR ${(order.total||0).toLocaleString()}</span></div>
+        <div class="track-row"><span class="track-lbl">Payment</span><span class="track-val">${order.payment}</span></div>
+        <div class="track-row"><span class="track-lbl">Status</span><span class="track-val"><span class="status-pill sp-${order.status}">${order.status}</span></span></div>
+        ${!isCancelled ? `
+        <div class="track-steps">
+          ${steps.map((s,i) => `
+            <div class="tstep ${i<=si?'done':''}">
+              <div class="tstep-dot">${i<=si?'✓':''}</div>
+              <div class="tstep-lbl">${s}</div>
+            </div>`).join('')}
+        </div>` : `<div style="margin-top:14px;color:var(--red);font-size:.82rem;padding:10px;background:rgba(179,58,42,.06);border:1px solid rgba(179,58,42,.15);">This order has been cancelled.</div>`}
+      </div>`;
+  } catch(e) {
+    result.innerHTML = '<div class="track-error">Could not fetch order. Please try again.</div>';
+  }
+}
+document.getElementById('trackIn').addEventListener('keydown', e => { if(e.key==='Enter') trackOrder(); });
+
+/* ══════ REVIEWS FORM ══════ */
+const starEls = document.querySelectorAll('.star');
+starEls.forEach(s => {
+  s.addEventListener('click', () => { selRating=+s.dataset.v; starEls.forEach((x,i)=>x.classList.toggle('on',i<selRating)); });
+  s.addEventListener('mouseover', () => { const v=+s.dataset.v; starEls.forEach((x,i)=>x.classList.toggle('on',i<v)); });
+});
+document.getElementById('starsRow').addEventListener('mouseleave', () => starEls.forEach((x,i)=>x.classList.toggle('on',i<selRating)));
+
+async function submitReview() {
+  const name=document.getElementById('fbName').value.trim();
+  const email=document.getElementById('fbEmail').value.trim();
+  const msg=document.getElementById('fbMsg').value.trim();
+  if (!name||!email||!msg||!selRating) { toast('Please fill all fields & rate us!'); return; }
+
+  const review = { name, email, rating:selRating, text:msg, date:new Date().toLocaleDateString('en-LK',{month:'long',year:'numeric'}) };
+
+  // Always save locally first
+  const arr = JSON.parse(localStorage.getItem('windyReviews')||'[]');
+  arr.unshift(review);
+  localStorage.setItem('windyReviews', JSON.stringify(arr));
+
+  // Also try Sheets if connected
+  if (useSheets) {
+    try { await sheetPost({ type:'review', ...review }); } catch(e) {}
+  }
+
+  allReviews = [review, ...allReviews];
+  renderReviews();
+  document.getElementById('fbName').value=''; document.getElementById('fbEmail').value=''; document.getElementById('fbMsg').value='';
+  selRating=0; starEls.forEach(s=>s.classList.remove('on'));
+  toast('Review submitted! Thank you \u2764');
+}
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550 TOAST \u2550\u2550\u2550\u2550\u2550\u2550 */
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+updateCartUI();
+</script>
+</body>
+</html>
