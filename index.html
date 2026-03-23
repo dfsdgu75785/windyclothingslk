@@ -465,7 +465,7 @@ footer { background:var(--ink); padding:60px 52px 28px; color:rgba(255,255,255,.
 .suc-p { color:var(--muted); line-height:1.7; font-size:.9rem; }
 .suc-ref { margin:16px 0; padding:13px; background:rgba(45,122,79,.07); border:1.5px solid rgba(45,122,79,.2); font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:4px; color:var(--green); }
 
-  /* ─── STAFF ─── */
+/* ─── STAFF ─── */
 .staff-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:24px; }
 .staff-card { background:var(--white); border:1px solid rgba(184,137,74,.12); padding:28px 20px; text-align:center; transition:all .4s; position:relative; overflow:hidden; }
 .staff-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(184,137,74,.15); border-color:rgba(184,137,74,.35); }
@@ -665,8 +665,14 @@ footer { background:var(--ink); padding:60px 52px 28px; color:rgba(255,255,255,.
     </div>
 
   </div>
-  
-<!-- ORDER TRACKER -->
+
+  <!-- Footer Quote -->
+  <div class="team-footer-quote">
+    <blockquote>"We don't just make clothes. We craft the wind that moves a generation."</blockquote>
+    <cite>THE WINDY COLLECTIVE — EST. 2026</cite>
+  </div>
+</section>
+
 <div class="tracker-section" id="tracker">
   <div class="tracker-box">
     <h2>Track Your Order</h2>
@@ -792,7 +798,7 @@ footer { background:var(--ink); padding:60px 52px 28px; color:rgba(255,255,255,.
    Paste your Apps Script Web App URL here.
    Same URL goes in windy-admin.html too.
 ═══════════════════════════════════════ */
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwEWKp_Fv48nMlIngxknpPDhXRlK_W_VTgKjkob2BJsm3-c4NAn1C-8QZ5uBLPDpUBq/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxiPrB_oixrRDsNuZ4sPSxmz2KVK8CUEPWO3nZkJHsxEzk2wLIUjSrY2PSpXWJVbxEn/exec';
 
 /* ══════ CONFIG ══════ */
 const COUPONS = { WINDY10:10, FLOW20:20, LAUNCH30:30, VIP50:50 };
